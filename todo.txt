@@ -1,0 +1,3 @@
+Jul 18 2023
+- We need a database.
+- Do we go with C++, or Python?
