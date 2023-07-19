@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express();
 const crypto = require('crypto-js');
+const fs = require("fs") // filesystem mgmt
 
 const { Sequelize, DataTypes } = require('sequelize');
 const {User,Matrix,Well} = require('./database.js')
@@ -18,14 +19,24 @@ const cookies = require('cookie-parser') //https://stackoverflow.com/questions/1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Fn
 
-async function readFile(filePath) {
-  try {
-    const data = await fs.readFile(filePath);
-    //console.log(data.toString());
-    return data.toString()
-  } catch (error) {
-    console.error(`Got an error trying to read the file: ${error.message}`);
+async function arrayToString(arr) {
+  var result = '';
+  for (const element of arr) {
+    result += element.toString();
   }
+  return result
+}
+
+async function readFileAsString(filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
 }
 
 // 99 -> 099 or 0099 or 00099
@@ -59,7 +70,7 @@ app.use(bparse.json());
 app.use(cookies())
 // load /img/ media from folder 'img'
 app.use('/static', express.static('static'));
-//app.use('/favicon.ico', express.static('favicon.ico'));
+app.use('/favico.ico', express.static('favicon.ico'));
 app.use('/robots.txt', express.static('robots.txt'));
 
 // Express configuration
@@ -93,11 +104,37 @@ async function checkAuthorization(user_uuid, user_hash) {
 
 }
 
+async function pageloader() {
+
+  var data_to_string = ''
+
+  try {
+    const header = await readFileAsString('static/00_headers.html')
+
+    const tails = await readFileAsString('static/99_tails.html')
+
+
+
+    const page_data = [header, tails]
+
+    data_to_string = await arrayToString(page_data)
+
+
+  } catch (error) {
+    console.error('Error Reading file: ', error)
+  }
+
+  return data_to_string
+}
+
 // Main page - Login
 app.get('/', async (req, res) => {
 
   const user_uuid = req.cookies.user_uuid
   const user_hash = req.cookies.user_hash
+
+  // In the future: Pass the rest of the data to the page loader.
+  page_data = await pageloader()
 
   // check login cookies against database
   login_flag = await checkAuthorization(user_uuid, user_hash)
@@ -106,9 +143,9 @@ app.get('/', async (req, res) => {
     Account = await Well.fetchUserByUUID(user_uuid)
     
     // debug
-    console.log(Account)
+    //console.log(Account)
 
-    res.status(200).send(Account)
+    res.status(200).send(page_data)
   
   } else {
     // User not logged in

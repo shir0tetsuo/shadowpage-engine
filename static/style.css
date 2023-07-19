@@ -1,0 +1,25 @@
+body {
+  font-family: monospace;
+  background-color: #CFFFB3;
+  color: #1d1d1d;
+  font-size: 18px;
+}
+
+.loginbox {
+  padding-left: 5%;
+  padding-right: 5%;
+  border-left: 5px solid #99A1A6;
+  border-radius: 15px;
+  background-color: #CFFFB3;
+  box-shadow:  41px 41px 82px #b0d998,
+             -41px -41px 82px #eeffce;
+}
+
+a:hover {
+  color: #98ee00;
+  background-color: #354d3f;
+  padding-left: 10px;
+  -moz-transition: .25s ease-in-out;
+  -webkit-transition: .25s ease-in-out;
+  transition: .25s ease-in-out;
+}
