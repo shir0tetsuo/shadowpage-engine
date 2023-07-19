@@ -1,3 +1,5 @@
 .env
 node_modules/
-server-data.sql
+server-data.sqlite
+inpw.py
+compsock.py

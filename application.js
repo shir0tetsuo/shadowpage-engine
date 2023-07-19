@@ -1,11 +1,10 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Import
 const express = require('express');
 const app = express();
 const crypto = require('crypto-js');
+
 const { Sequelize, DataTypes } = require('sequelize');
-// According to huggingchat
-var googleapis = require('googleapis')
-var auth = require('google-auth-library')
-const { ClosureSystem } = require('closure-library')
+const {User,Matrix,Well} = require('./database.js')
 
 // TODO: We don't have the priv key because it's on the other server.
 //const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY) // $ => G,S
@@ -17,7 +16,7 @@ const bparse = require('body-parser') //https://codeforgeek.com/handle-get-post-
 const cookies = require('cookie-parser') //https://stackoverflow.com/questions/16209145/how-to-set-cookie-in-node-js-using-express-framework
 
 
-// Fn
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Fn
 
 async function readFile(filePath) {
   try {
@@ -29,47 +28,30 @@ async function readFile(filePath) {
   }
 }
 
+// 99 -> 099 or 0099 or 00099
+// 99 = 90 (2nd place), 9 (1st place)
+// num + (0 * places)
 function zeroPad(num, places) {
   var zero = places - num.toString().length + 1;
   return Array(+(zero > 0 && zero)).join("0") + num;
 }
 
+// Fetch random integer
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
 
-function genID() {
-  return `1P${zeroPad(getRandomInt(999),3)}X${Date.now()}`
-}
 
 
 // Load environment variables from .env file
 require('dotenv').config();
 
-// Sequelize configuration
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: process.env.DB_FILE_PATH
-});
-
-// Define the User model
-const User = sequelize.define('User', {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false
-  }
-});
-
+// Init DB with Sync Call
+// should produce an error if it doesn't work
 User.sync()
+Matrix.sync()
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Usage Constructors
 
 app.use(express.json());
 app.use(bparse.urlencoded({ extended: true }));
@@ -83,23 +65,67 @@ app.use('/robots.txt', express.static('robots.txt'));
 // Express configuration
 app.use(express.static('static'));
 
-// Load information from a static file
-function loadStaticFile(filename) {
-  // Implementation to load file contents goes here
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Main Application
+
+// goes into database.js
+async function checkAuthorization(user_uuid, user_hash) {
+  console.log('Authorization Check')
+
+  var user_logged = false;
+
+  // no uuid or no hash
+  if (!user_uuid || !user_hash) return user_logged;
+
+  Account = await Well.fetchUserByUUID(user_uuid)
+
+  // no account
+  if (!Account) return user_logged;
+
+  // if account hash doesn't equal the user hash in cookies
+  if (Account.account_hash != user_hash) return user_logged;
+
+  // if account is disabled
+  if (Account.account_enabled == false) return user_logged;
+
+  console.log('Authenticated for ' + user_uuid)
+  user_logged = true;
+  return user_logged;
+
 }
 
 // Main page - Login
-app.get('/', (req, res) => {
-  // Google authentication implementation goes here
-  // If user is logged in with Gmail, display contents from passed-user-login.html
-  console.log(res)
+app.get('/', async (req, res) => {
+
+  const user_uuid = req.cookies.user_uuid
+  const user_hash = req.cookies.user_hash
+
+  // check login cookies against database
+  login_flag = await checkAuthorization(user_uuid, user_hash)
+
+  if (login_flag) {
+    Account = await Well.fetchUserByUUID(user_uuid)
+    
+    // debug
+    console.log(Account)
+
+    res.status(200).send(Account)
+  
+  } else {
+    // User not logged in
+    res.status(200).send('OK')
+  }
+ 
 });
 
-// Start the server
-const port = process.env.PORT || 3000;
+// Simple UUID Generator
+app.get('/g', async (req, res) => {
+  res.status(200).send(Well.fetchUniqueUUID())
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Start the server
+const port = process.env.PORT //|| 3000;
 app.listen(port, () => {
-  // Preload ClosureSystem on app listen
-  //ClosureSystem.preload
+
   console.log(`The server has started on port ${port}`);
 });
 
