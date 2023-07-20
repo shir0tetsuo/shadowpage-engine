@@ -13,6 +13,11 @@ const sequelize = new Sequelize({
   storage: process.env.DB_FILE_PATH
 });
 
+const crypto = require('crypto-js');
+const SHA256 = require('crypto-js/sha256')
+const bcrypt = require('bcrypt') // https://www.npmjs.com/package/bcrypt
+const saltRounds = 10;
+
 const { v4: uuidv4 } = require('uuid');
 // const uniqueID = generateUUID();
 function generateUUID() {
@@ -38,6 +43,18 @@ const User = sequelize.define('User', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 0
+  },
+  // Level
+  account_level : {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1
+  },
+  // Tokens are a currency
+  account_tokens : {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1
   },
   // If disabled, user is banned from the site.
   account_enabled: {
@@ -70,6 +87,8 @@ function userdummy() {
     data = {};
     data.account_uuid = '00000000-0000-0000-0000-000000000000'//generateUUID();
     data.account_hash = 'no-hash';
+    data.account_level = 1;
+    data.account_tokens = 1;
     data.account_enabled = true;
     data.account_authority = 0;
     console.log(data)
@@ -91,6 +110,12 @@ const db_well = {
     },
     fetchUniqueUUID() {
         return generateUUID();
+    },
+    fetchSHA256(string_input) {
+      return SHA256(string_input).toString();
+    },
+    fetchCrypt(string_to_crypt) {
+      return bcrypt.hashSync(string_to_crypt, saltRounds);
     }
 }
 

@@ -43,12 +43,34 @@ nav a {
   transition: .25s ease-in-out;
 }
 
+.hidden {
+  display: none;
+}
+
+.userregister {
+  width: 100%;
+  padding: 5px;
+  background-color: #1F1F1F;
+  opacity: 0.75;
+  z-index: 2;
+}
+
+input {
+  background-color: #1F1F1F;
+  color: #FFF;
+  padding: 2px;
+}
+
 .cardmarine {
-  background-color: #9291C7;
+  background: #9291C7 !important;
 }
 
 .cardtomato {
-  background-color: #FE654F;
+  background: #FE654F !important;
+}
+
+.padleft {
+  padding-left: 3rem;
 }
 
 .hero {
@@ -63,6 +85,27 @@ nav a {
   grid-template-columns: 1fr 1fr;
   height: 95vh;
   padding: 3rem calc((100vw - 1300px) / 2);
+}
+
+.user-container {
+  display: grid;
+  grid-template-columns: 1.5fr 0.5fr;
+  padding: 3rem;
+}
+
+.user-container a {
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  font-size: 1.5rem;
+  border: none;
+  color: #FFF;
+  background: #292929;
+  cursor: pointer;
+  border-radius: 0px;
+  box-shadow: 7px 7px 20px #242424;
+  -moz-transition: .25s ease-in-out;
+  -webkit-transition: .25s ease-in-out;
+  transition: .25s ease-in-out;
 }
 
 .column-left {
@@ -80,6 +123,18 @@ nav a {
 }
 
 .column-right blockquote {
+  border-radius: 10px;
+  border-left: 1rem solid #9291C7;
+  color: #9291C7;
+  background-color: #1F1F1F;
+  opacity: 0.75;
+  width: 90%;
+  margin: 1rem;
+  padding: 1rem;
+  font-size: 1.5rem;
+}
+
+.column-left blockquote {
   border-radius: 10px;
   border-left: 1rem solid #9291C7;
   color: #9291C7;
@@ -118,8 +173,8 @@ a {
 }
 
 a:hover {
-  background: #fff;
-  color: #1F1F1F;
+  background: #fff !important;
+  color: #1F1F1F !important;
   -moz-transition: .25s ease-in-out;
   -webkit-transition: .25s ease-in-out;
   transition: .25s ease-in-out;
@@ -131,6 +186,7 @@ a:hover {
   align-items: center;
   color: #fff;
   padding: 0rem 2rem;
+  min-width: 10rem;
 }
 
 .hero-image {

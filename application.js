@@ -191,6 +191,66 @@ app.get('/g', async (req, res) => {
   res.status(200).send(Well.fetchUniqueUUID())
 });
 
+// User by ID
+app.get('/u/:uuid', async (req, res) => {
+  const user_uuid = req.cookies.user_uuid
+  const user_hash = req.cookies.user_hash
+  const { uuid } = req.params;
+
+  // login check
+  login_flag = await checkAuthorization(user_uuid, user_hash)
+
+  // user = user
+  editable = (uuid == user_uuid && login_flag) ? true : false;
+  // edit button, disabled
+  edit_button = (editable) ? `<a class='cardmarine' href='#' id='user_edit_button' title='Edit Account'><i class='bx bx-cog' ></i></a>` : ''
+
+  const account_info = await Well.fetchUserByUUID(uuid)
+  const page_end = await readFileAsString('static/12_user_panel_end.html')
+
+  if (account_info) {
+
+    // static
+    const central = await readFileAsString('static/11_user_panel_top.html')
+
+    // put account uuid from db onto page
+    const field_acc_uuid = `<i class='bx bxs-user-rectangle'></i> ${account_info.account_uuid}`
+    var central_shifted = replaceAllInstances(central, '{?field_acc_uuid}', field_acc_uuid)
+
+    // put edit button on page if available
+    central_shifted = replaceAllInstances(central_shifted, '{?edit_button}', edit_button)
+
+    // run pageloader
+    const page_data = await pageloader([central_shifted, page_end])
+
+    // put user account url on page at nav
+    var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
+
+    // send response
+    res.status(200).send(page_data_shifted)
+
+  } else {
+
+    const central = await readFileAsString('static/11_user_panel_top.html')
+    const field_acc_uuid = `<i class='bx bxs-user-rectangle'></i> 00000000-0000-0000-0000-000000000000`
+
+    var central_shifted = replaceAllInstances(central, '{?field_acc_uuid}', field_acc_uuid)
+    central_shifted = replaceAllInstances(central_shifted, '{?edit_button}', edit_button)
+
+    const page_data = await pageloader([central_shifted, page_end])
+    var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
+    
+    res.status(404).send(page_data_shifted)
+  }
+})
+
+app.get('/register', async (req, res) => {
+  const central = await readFileAsString('static/10_user_registration.html')
+  const page_end = await readFileAsString('static/12_user_panel_end.html')
+  page_data = await pageloader([central, page_end])
+  res.status(200).send(page_data)
+})
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Start the server
 const port = process.env.PORT //|| 3000;
 app.listen(port, () => {

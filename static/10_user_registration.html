@@ -1,0 +1,60 @@
+<section class="hero">
+    <div class="user-container">
+      <div class="column-left">
+        <!-- Account Not Logged In-->
+        <blockquote>
+            <i class='bx bxs-user-rectangle' ></i> Create Account or Login
+        </blockquote>
+        <!-- Not Logged In Buttons -->
+        <div class="padleft" id="not-logged-in">
+            JavaScript <span id="jswarn"><i class='bx bxs-x-circle'></i></span> and Cookies required.<br><br><br>
+            <a class="cardmarine" href="#" onclick="toggleElementByID('register-user-by-password'); return false;"><i class='bx bxs-user-plus' ></i> Create Account</a>
+            <br><br><br><a href="#" onclick="toggleElementByID('login-user-by-uuid'); return false;"><i class='bx bxs-user-badge' ></i> Authenticate UUID</a>
+        </div>
+        
+      </div>
+      <div class="column-right">
+          <div id="register-user-by-password" class="hidden userregister">
+            <form>
+                <h1><i class='bx bx-error-circle'></i><i class='bx bxs-user-plus' ></i></h1> 
+                Enter Password
+                <br>
+                <input type="password" id="password" placeholder="Password" size="25">
+                <br>
+                <input type="password" id="passwordconfirm" placeholder="Password" size="25">
+                <br>
+                <span id="servermsg_register"></span><br><br>
+                <a class="cardmarine" href="#" id="register_submit" value="Submit"><i class='bx bxs-user-plus' ></i></a>
+            </form>
+          </div>
+          <div id="login-user-by-uuid" class="hidden userregister">
+            <form>
+                <h1><i class='bx bx-error-circle'></i><i class='bx bxs-user-badge' ></i></h1> 
+                Enter UUID & Password
+                <br>
+                <input type="text" id="form_uuid" placeholder="00000000-0000-0000-0000-000000000000" size="34">
+                <br>
+                <input type="password" id="form_login_passwd" placeholder="Password" size="25">
+                <br>
+                <span id="servermsg_login"></span><br><br>
+                <a class="cardmarine" href="#" id="login_submit" value="Submit"><i class='bx bxs-user-badge' ></i></a>
+            </form>
+          </div>
+          <script>
+            $(document).ready(function(){
+                toast('jswarn',"<i class='bx bxs-check-circle' ></i>")
+                $("#register_submit").click(function() {
+                    entered_pass=$("#password").val();
+                    entered_confirm=$("#passwordconfirm").val();
+                    toast('servermsg_register','Hello, World!')
+                })
+                $("#login_submit").click(function() {
+                    entered_uuid=$("#form_uuid").val();
+                    entered_pass=$("#form_login_passwd").val();
+                    toast('servermsg_login','Hello, World!')
+                })
+            })
+
+          </script>
+    <!-- (Case: Already Logged In: Display Logout) -->
+  <!-- 10_user_registration end -->
