@@ -39,6 +39,20 @@ async function readFileAsString(filePath) {
   });
 }
 
+// From ChatGPT
+function replaceAllInstances(inputString, searchString, replacementString) {
+  // Escape special characters in the search string to avoid regex issues
+  const escapedSearchString = searchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Create a regular expression to match all instances of the search string
+  const regex = new RegExp(escapedSearchString, 'g');
+
+  // Use the replace method with the regular expression to perform the replacement
+  const resultString = inputString.replace(regex, replacementString);
+
+  return resultString;
+}
+
 // 99 -> 099 or 0099 or 00099
 // 99 = 90 (2nd place), 9 (1st place)
 // num + (0 * places)
@@ -104,18 +118,17 @@ async function checkAuthorization(user_uuid, user_hash) {
 
 }
 
-async function pageloader() {
+async function pageloader(central_array = []) {
 
   var data_to_string = ''
 
   try {
     const header = await readFileAsString('static/00_headers.html')
-
+    const central = await arrayToString(central_array)
     const tails = await readFileAsString('static/99_tails.html')
 
 
-
-    const page_data = [header, tails]
+    const page_data = [header, central, tails]
 
     data_to_string = await arrayToString(page_data)
 
@@ -133,23 +146,42 @@ app.get('/', async (req, res) => {
   const user_uuid = req.cookies.user_uuid
   const user_hash = req.cookies.user_hash
 
-  // In the future: Pass the rest of the data to the page loader.
-  page_data = await pageloader()
-
+  
   // check login cookies against database
   login_flag = await checkAuthorization(user_uuid, user_hash)
 
   if (login_flag) {
     Account = await Well.fetchUserByUUID(user_uuid)
-    
-    // debug
-    //console.log(Account)
 
-    res.status(200).send(page_data)
+    // central piece data
+    const central = await readFileAsString('static/01_entry_default.html')
+
+    const badge = "<i class='bx bxs-user-rectangle'></i> "
+
+    var central_shifted = replaceAllInstances(central, '{?get_started_url}',`/u/${user_uuid}`)
+    central_shifted = replaceAllInstances(central_shifted, '{?get_started}', badge + user_uuid)
+
+    // page loader
+    const page_data = await pageloader([central_shifted])
+    var page_data_shifted = replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`)
+
+    res.status(200).send(page_data_shifted)
   
   } else {
     // User not logged in
-    res.status(200).send('OK')
+    // central piece data
+    const central = await readFileAsString('static/01_entry_default.html')
+
+    const badge = "<i class='bx bxs-user-plus' ></i> "
+
+    var central_shifted = replaceAllInstances(central, '{?get_started_url}','/register')
+    central_shifted = replaceAllInstances(central_shifted, '{?get_started}', badge + 'Create Account or Login')
+
+    // page loader
+    const page_data = await pageloader([central_shifted])
+    var page_data_shifted = replaceAllInstances(page_data, '{?user_account_url}','/register')
+
+    res.status(200).send(page_data_shifted)
   }
  
 });

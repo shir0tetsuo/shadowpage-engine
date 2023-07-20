@@ -5,14 +5,33 @@
         
         <title>shadowsword.ca</title>
 
-        <!-- https://coolors.co/ was helpful in generating this page. -->
+        <!-- https://coolors.co/ and https://neumorphism.io/ was helpful in generating this page. -->
         <link rel="stylesheet" href="/static/style.css">
-        <link href="https://cdn.jsdelivr.net/devicons/1.8.0/css/devicons.min.css" rel="stylesheet">
+
+        <link rel="stylesheet" href="/static/cards.css">
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
+
+        <!-- boxicons -->
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+
         <!-- http://vorillaz.github.io/devicons/#/dafont -->
         <link rel="shortcut icon" href="/favico.ico" type="image/x-icon">
       
         <!--<link rel="icon" href="assets/gswhite.png" sizes="64x64">-->
       
         <!--<script type="text/javascript" src="assets/davnet.js"></script>-->
-        <!-- end 00_headers -->
     </head>
+    <body>
+        <nav>
+            <div class="logo">shadowsword.ca</div>
+            <div class="nav-items">
+                <a class="cardmarine" title="Home" href="/"><i class='bx bx-home-alt'></i></a>
+                <a class="cardtomato" title="User Account" href="{?user_account_url}"><i class='bx bxs-user-account'></i></a>
+                <a title="Contact" href="mailto:shadowsword@protonmail.com"><i class='bx bx-mail-send'></i></a> 
+                <a title="Github Project" href="https://github.com/shir0tetsuo/shadowpage-engine"> <i class="devicon-github-original"></i></a> 
+                <a title="Donate" href="https://paypal.me/sabredevelopment"><i class='bx bxl-paypal' ></i></a>
+            </div>
+          </nav>
+          <!-- 00_headers end -->
