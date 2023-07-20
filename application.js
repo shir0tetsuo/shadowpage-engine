@@ -238,6 +238,15 @@ app.get('/u/:uuid', async (req, res) => {
   edit_button = (editable) ? `<a class='cardmarine' href='#' id='user_edit_button' title='Edit Account'><i class='bx bx-cog' ></i></a>` : ''
 
   const account_info = await Well.fetchUserByUUID(uuid)
+
+  var admin_privilege = false
+  
+  if (account_info) {
+    admin_privilege = (account_info.account_authority >= 4 && editable) ? true : false
+  } 
+  
+  const admin_edit_button = (admin_privilege) ? `<a class="cardbee" title="Administrative Tools" href="/admin"><i class='bx bxs-zap' ></i></a>` : ``
+
   const page_end = await readFileAsString('static/12_user_panel_end.html')
 
   if (account_info) {
@@ -251,6 +260,7 @@ app.get('/u/:uuid', async (req, res) => {
 
     // put edit button on page if available
     central_shifted = replaceAllInstances(central_shifted, '{?edit_button}', edit_button)
+    central_shifted = replaceAllInstances(central_shifted, '{?admin_button}', admin_edit_button)
 
     // run pageloader
     const page_data = await pageloader([central_shifted, page_end])
@@ -268,6 +278,7 @@ app.get('/u/:uuid', async (req, res) => {
 
     var central_shifted = replaceAllInstances(central, '{?field_acc_uuid}', field_acc_uuid)
     central_shifted = replaceAllInstances(central_shifted, '{?edit_button}', edit_button)
+    central_shifted = replaceAllInstances(central_shifted, '{?admin_button}', admin_edit_button)
 
     const page_data = await pageloader([central_shifted, page_end])
     var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')

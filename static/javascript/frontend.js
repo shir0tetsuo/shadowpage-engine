@@ -18,6 +18,16 @@ function userLogout() {
     window.location.href = getBaseURL()
 }
 
+function handleEnterKeyPress(event) {
+  // Check if the Enter key was pressed (keyCode 13)
+  if (event.keyCode === 13) {
+    // Replace the function below with your desired function
+    console.log("Password entered:", event.target.value);
+    // For example, you can call a function to check the password validity here
+    // checkPassword(event.target.value);
+  }
+}
+
 function checkCookie(cookieName) {
     // Split all cookies into an array
     const cookies = document.cookie.split(';');
@@ -35,6 +45,10 @@ function checkCookie(cookieName) {
     return false;
 }
 
+function isHTTPS() {
+  return window.location.protocol === "https:";
+}
+
 function getBaseURL() {
     const currentURL = window.location.href;
     const url = new URL(currentURL);
@@ -48,9 +62,15 @@ function getBaseURL() {
   }
 
 function setCookie(name, value, expirationDays) {
+
     const date = new Date();
     date.setTime(date.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
     const expires = "expires=" + date.toUTCString();
-    document.cookie = name + "=" + value + "; SameSite=none;" + expires + "; path=/; Secure";
+    if (isHTTPS()) {
+      document.cookie = name + "=" + value + "; SameSite='Lax';" + expires + "; path=/; Secure";
+    } else {
+      document.cookie = name + "=" + value + "; SameSite='Lax';" + expires + "; path=/;"
+    }
+
   }
   

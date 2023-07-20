@@ -10,4 +10,5 @@ async function GenerateAdminAccount() {
     console.log('📣 HASH:',account.account_hash)
 }
 
+console.log('📣 Please wait while the server data sqlite is updated. An error may occur if a conflict exists.')
 GenerateAdminAccount()
