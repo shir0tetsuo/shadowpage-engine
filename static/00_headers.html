@@ -11,8 +11,6 @@
         <!-- https://coolors.co/ and https://neumorphism.io/ was helpful in generating this page. -->
         <link rel="stylesheet" href="/static/style.css">
 
-        <link rel="stylesheet" href="/static/cards.css">
-
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
 
         <!-- boxicons -->
@@ -26,7 +24,7 @@
       
         <!--<script type="text/javascript" src="assets/davnet.js"></script>-->
     </head>
-    <body>
+    <body onload="init_page()">
         <nav>
             <div class="logo">shadowsword.ca</div>
             <div class="nav-items">
@@ -35,6 +33,16 @@
                 <a title="Contact" href="mailto:shadowsword@protonmail.com"><i class='bx bx-mail-send'></i></a> 
                 <a title="Github Project" href="https://github.com/shir0tetsuo/shadowpage-engine"> <i class="devicon-github-original"></i></a> 
                 <a title="Donate" href="https://paypal.me/sabredevelopment"><i class='bx bxl-paypal' ></i></a>
+                <a class="cardbee" title="About" href="/about"><i class='bx bxs-help-circle' ></i></a>
+                <a id="logout_button" title="Logout" onclick="userLogout(); return false;" href="/"><i class='bx bx-log-out-circle' ></i></a>
             </div>
           </nav>
+          <script type="text/javascript">
+            function init_page() {
+                element = document.getElementById('logout_button')
+                if (!checkCookie('user_uuid')) {
+                    element.style.display = 'none';
+                }
+            }
+          </script>
           <!-- 00_headers end -->

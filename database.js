@@ -24,6 +24,41 @@ function generateUUID() {
     return uuidv4();
 }
 
+function getNow() {
+  return new Date().toLocaleString();
+}
+
+// DEFAULT SETTINGS for New Users
+class UserAccount {
+  constructor(user_uuid, user_hash) {
+    this.account_uuid = user_uuid;
+    this.account_enabled = true;
+    this.account_hash = user_hash;
+    this.account_authority = 0;
+    this.account_level = 1;
+    this.account_tokens = 50;
+  }
+
+  async GenerateAccount() {
+    try {
+      const new_account = await User.create({
+        account_uuid: this.account_uuid,
+        account_hash: this.account_hash,
+        account_authority: this.account_authority,
+        account_enabled: this.account_enabled,
+        account_level: this.account_level,
+        account_tokens: this.account_tokens
+      })
+      console.log('Account Generation:',this.account_uuid,this.account_hash)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  // async CheckForPreload(this) {...}
+
+}
+
 // Define the User model
 const User = sequelize.define('User', {
   // Account Unique ID; What will be used to login.
@@ -116,6 +151,15 @@ const db_well = {
     },
     fetchCrypt(string_to_crypt) {
       return bcrypt.hashSync(string_to_crypt, saltRounds);
+    },
+    compareCrypt(unencrypted_string, encrypted_string) {
+      return bcrypt.compareSync(unencrypted_string, encrypted_string)
+    },
+    async InsertNewUser(user_uuid, user_hash) {
+      const account = new UserAccount(user_uuid, user_hash)
+      await account.GenerateAccount()
+      console.log('👍 Generated Account',user_uuid)
+      return account
     }
 }
 

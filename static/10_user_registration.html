@@ -1,11 +1,9 @@
 <section class="hero">
     <div class="user-container">
       <div class="column-left">
-        <!-- Account Not Logged In-->
         <blockquote>
             <i class='bx bxs-user-rectangle' ></i> Create Account or Login
         </blockquote>
-        <!-- Not Logged In Buttons -->
         <div class="padleft" id="not-logged-in">
             JavaScript <span id="jswarn"><i class='bx bxs-x-circle'></i></span> and Cookies required.<br><br><br>
             <a class="cardmarine" href="#" onclick="toggleElementByID('register-user-by-password'); return false;"><i class='bx bxs-user-plus' ></i> Create Account</a>
@@ -46,12 +44,42 @@
                 $("#register_submit").click(function() {
                     entered_pass=$("#password").val();
                     entered_confirm=$("#passwordconfirm").val();
-                    toast('servermsg_register','Hello, World!')
+                    $.post("/authorization", {mode: 'register', password: entered_pass, passwordconfirm: entered_confirm}, function(data) {
+                        if (data) {
+                            server_response = data
+                            if (server_response.server) {
+                                toast('servermsg_register', server_response.server)
+                            } 
+                            if (server_response.grant) {
+                                const redirection = getBaseURL() + server_response.grant.redirection
+                                setCookie('user_uuid', server_response.grant.new_UUID, 180)
+                                setCookie('user_hash', server_response.grant.new_HASH, 180)
+                                setTimeout(() => {
+                                    window.location.href = redirection
+                                }, 1500)
+                            }
+                        }
+                    })
                 })
                 $("#login_submit").click(function() {
                     entered_uuid=$("#form_uuid").val();
                     entered_pass=$("#form_login_passwd").val();
-                    toast('servermsg_login','Hello, World!')
+                    $.post("/authorization", {mode: 'login', uuid: entered_uuid, password: entered_pass}, function(data) {
+                        if (data) {
+                            server_response = data
+                            if (server_response.server) {
+                                toast('servermsg_login', server_response.server)
+                            } 
+                            if (server_response.grant) {
+                                const redirection = getBaseURL() + server_response.grant.redirection
+                                setCookie('user_uuid', server_response.grant.UUID, 180)
+                                setCookie('user_hash', server_response.grant.HASH, 180)
+                                setTimeout(() => {
+                                    window.location.href = redirection
+                                }, 1500)
+                            }
+                        }
+                    })
                 })
             })
 

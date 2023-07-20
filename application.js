@@ -19,6 +19,34 @@ const cookies = require('cookie-parser') //https://stackoverflow.com/questions/1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Fn
 
+class ExpiringSet {
+  // const authorization_timeout = new ExpiringSet();
+  // authorization_timeout.add(IPAddress, 5000)
+  // if authorization_timeout.has(IPAddress) {...}
+  constructor() {
+    this.set = new Set();
+  }
+
+  add(value, timeoutMilliseconds) {
+    this.set.add(value);
+    setTimeout(() => {
+      this.set.delete(value);
+    }, timeoutMilliseconds);
+  }
+
+  has(value) {
+    return this.set.has(value);
+  }
+
+  delete(value) {
+    return this.set.delete(value);
+  }
+
+  values() {
+    return this.set.values();
+  }
+}
+
 async function arrayToString(arr) {
   var result = '';
   for (const element of arr) {
@@ -85,6 +113,7 @@ app.use(cookies())
 // load /img/ media from folder 'img'
 app.use('/static', express.static('static'));
 app.use('/favico.ico', express.static('favicon.ico'));
+app.use('/favicon.ico', express.static('favicon.ico'));
 app.use('/robots.txt', express.static('robots.txt'));
 
 // Express configuration
@@ -94,7 +123,7 @@ app.use(express.static('static'));
 
 // goes into database.js
 async function checkAuthorization(user_uuid, user_hash) {
-  console.log('Authorization Check')
+  //console.log('Authorization Check')
 
   var user_logged = false;
 
@@ -143,8 +172,11 @@ async function pageloader(central_array = []) {
 // Main page - Login
 app.get('/', async (req, res) => {
 
-  const user_uuid = req.cookies.user_uuid
-  const user_hash = req.cookies.user_hash
+  const user_uuid = req.cookies.user_uuid;
+  const user_hash = req.cookies.user_hash;
+  const IPAddress = req.socket.remoteAddress;
+
+  console.log('Connection to / established by',IPAddress)
 
   
   // check login cookies against database
@@ -244,17 +276,85 @@ app.get('/u/:uuid', async (req, res) => {
   }
 })
 
+// User Registration
 app.get('/register', async (req, res) => {
   const central = await readFileAsString('static/10_user_registration.html')
+  const stub = await readFileAsString('static/19_stub_loggedin.html')
+  const page_end = await readFileAsString('static/12_user_panel_end.html')
+  const user_uuid = req.cookies.user_uuid
+  const user_hash = req.cookies.user_hash
+  login_flag = await checkAuthorization(user_uuid, user_hash)
+  if (login_flag) {
+    page_data = await pageloader([stub, page_end])
+  } else {
+    page_data = await pageloader([central, page_end])
+  }
+  
+  var page_data_shifted = replaceAllInstances(page_data, '{?user_account_url}',`/register`)
+  res.status(200).send(page_data_shifted)
+})
+
+// Need strong security here.
+const authorization_timeout = new ExpiringSet();
+app.post('/authorization', async (req, res) => {
+
+  const IPAddress = req.socket.remoteAddress;
+  
+  try {
+    if (authorization_timeout.has(IPAddress)) return res.status(200).json({ server: 'Please wait 5 seconds before sending another request.' })
+    authorization_timeout.add(IPAddress, 5000)
+    client_submission = Object.assign({},req.body)
+    if (!client_submission.mode) return res.status(200).json({ server: '<b class="cardtomato">Mode Not Set</b>' })
+
+    if (client_submission.mode == 'register') {
+      client_password = client_submission.password;
+      client_password_confirm = client_submission.passwordconfirm;
+      if (client_password != client_password_confirm) return res.status(200).json({ server: '<b class="cardtomato">Password non-match.</b>' })
+      if (client_password.length < 8) return res.status(200).json({ server: '<b class="cardtomato">Your password must be at least 8 characters in length.</b>' })
+
+      new_UUID = await Well.fetchUniqueUUID();
+      new_HASH = Well.fetchCrypt(client_password);
+
+      const NewUser = await Well.InsertNewUser(new_UUID, new_HASH)
+
+      res.status(200).json({ server: '<b class="cardmarine">OK</b>', grant: { new_UUID: new_UUID, new_HASH: new_HASH, redirection: '' } })
+    }
+
+    if (client_submission.mode == 'login') {
+      
+      client_uuid = client_submission.uuid;
+      const account_info = await Well.fetchUserByUUID(client_uuid)
+      const client_password_OK = Well.compareCrypt(client_submission.password, account_info.account_hash);
+
+      if (!account_info) return res.status(200).json({ server: '<b class="cardtomato">Invalid UUID/PASS</b>' })
+
+      if (!client_password_OK) return res.status(200).json({ server: '<b class="cardtomato">Invalid UUID/PASS</b>' })
+
+      res.status(200).json({ server: '<b class="cardmarine">OK</b>', grant: { UUID: client_uuid, HASH: account_info.account_hash, redirection: `u/${client_uuid}` } })
+    }
+  } catch (e) {
+    return res.status(500).json({ server: e.message })
+  }
+  
+})
+
+app.get('/about', async (req, res) => {
+  const central = await readFileAsString('static/20_about.html')
   const page_end = await readFileAsString('static/12_user_panel_end.html')
   page_data = await pageloader([central, page_end])
-  res.status(200).send(page_data)
+  const user_uuid = req.cookies.user_uuid
+  const user_hash = req.cookies.user_hash
+  login_flag = await checkAuthorization(user_uuid, user_hash)
+  
+  var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
+
+  res.status(200).send(page_data_shifted)
 })
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Start the server
 const port = process.env.PORT //|| 3000;
 app.listen(port, () => {
-
-  console.log(`The server has started on port ${port}`);
+  
+  console.log(`👍 The server has started on port ${port}`);
 });
 
