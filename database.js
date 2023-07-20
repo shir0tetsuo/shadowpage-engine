@@ -160,6 +160,19 @@ const db_well = {
       await account.GenerateAccount()
       console.log('👍 Generated Account',user_uuid)
       return account
+    },
+    async InsertAdminUser(admin_uuid, admin_pass) {
+      try {
+        const new_account = await User.create({
+          account_uuid: admin_uuid,
+          account_hash: bcrypt.hashSync(admin_pass, saltRounds),
+          account_authority: 4,
+          account_level: 100,
+          account_tokens: 160
+        })
+      } catch (e) {
+        console.log(e)
+      }
     }
 }
 
