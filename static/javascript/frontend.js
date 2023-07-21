@@ -28,6 +28,19 @@ function handleEnterKeyPress(event) {
   }
 }
 
+function copyToClipboard(elementID) {
+  const textToCopy = document.getElementById(elementID).innerText;
+  const tempElement = document.createElement("textarea");
+  tempElement.value = textToCopy;
+  document.body.appendChild(tempElement);
+  tempElement.select();
+  document.execCommand("copy");
+  document.body.removeChild(tempElement);
+
+  // Optionally, you can add a message to indicate that the text is copied.
+  //alert("Text copied to clipboard: " + textToCopy);
+}
+
 function checkCookie(cookieName) {
     // Split all cookies into an array
     const cookies = document.cookie.split(';');

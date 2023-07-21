@@ -1,9 +1,9 @@
   <section class="hero">
       <div class="user-container">
         <div class="column-left">
-          User Account
+          User Account <div class="hidden" id="field_uuid">{?field_acc_uuid}</div>
           <blockquote>
-              {?field_acc_uuid}
+              <span title="Click to Copy UUID" style="cursor: grab;" onclick="copyToClipboard('field_uuid')">{?field_acc_uuid}</span>
           </blockquote>
         </div>
         <div class="column-right">
