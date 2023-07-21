@@ -1,3 +1,6 @@
+/* 
+    sync -> read ADMINUUID and ADMINPASS from the .env -> insert admin account -> get account info
+*/
 require('dotenv').config();
 const {User, Well} = require('./database.js')
 
