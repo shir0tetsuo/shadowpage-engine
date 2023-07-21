@@ -4,14 +4,16 @@
     If you have a different database setup than the default sqlite database, you should
     have a look at how database interactions are done here to see if they should be changed.
 */
+const { LOG } = require('./logging.js')
 require('dotenv').config();
 const { Sequelize, DataTypes } = require('sequelize');
 // Sequelize configuration
-console.log(process.env.DB_FILE_PATH + ' is loaded.')
+LOG.puzzle(process.env.DB_FILE_PATH + ' is loaded.')
 const sequelize = new Sequelize({
   dialect: 'sqlite',
   storage: process.env.DB_FILE_PATH
 });
+
 
 const crypto = require('crypto-js');
 const SHA256 = require('crypto-js/sha256')
@@ -49,7 +51,7 @@ class UserAccount {
         account_level: this.account_level,
         account_tokens: this.account_tokens
       })
-      console.log('Account Generation:',this.account_uuid,this.account_hash)
+      LOG.puzzle('Account Generation: ' + this.account_uuid + ' ' + this.account_hash)
     } catch (e) {
       console.log(e)
     }
@@ -123,10 +125,11 @@ function userdummy() {
     data.account_uuid = '00000000-0000-0000-0000-000000000000'//generateUUID();
     data.account_hash = 'no-hash';
     data.account_level = 1;
-    data.account_tokens = 1;
+    data.account_tokens = 0;
     data.account_enabled = true;
     data.account_authority = 0;
-    console.log(data)
+    LOG.puzzle('Dummy Generated')
+    return data;
 }
 
 async function user_by_uuid(user_uuid) {
@@ -143,24 +146,28 @@ const db_well = {
     async fetchUserByUUID(user_uuid) {
         return await user_by_uuid(user_uuid);
     },
+
     fetchUniqueUUID() {
         return generateUUID();
     },
-    fetchSHA256(string_input) {
-      return SHA256(string_input).toString();
-    },
+
+    fetchSHA256(string_input) { return SHA256(string_input).toString(); },
+
     fetchCrypt(string_to_crypt) {
       return bcrypt.hashSync(string_to_crypt, saltRounds);
     },
-    compareCrypt(unencrypted_string, encrypted_string) {
-      return bcrypt.compareSync(unencrypted_string, encrypted_string)
-    },
+
+    fetchRandomInt(max) { return Math.floor(Math.random() * Math.floor(max)); }, //v1
+
+    compareCrypt(unencrypted_string, encrypted_string) { return bcrypt.compareSync(unencrypted_string, encrypted_string); },
+
     async InsertNewUser(user_uuid, user_hash) {
       const account = new UserAccount(user_uuid, user_hash)
       await account.GenerateAccount()
-      console.log('👍 Generated Account',user_uuid)
+      LOG.mega('Generated Account ' + user_uuid)
       return account
     },
+
     async InsertAdminUser(admin_uuid, admin_pass) {
       try {
         const new_account = await User.create({
@@ -170,10 +177,13 @@ const db_well = {
           account_level: 100,
           account_tokens: 160
         })
+        LOG.disc('Generated Admin Account '+admin_uuid)
       } catch (e) {
         console.log(e)
       }
-    }
+    },
+
+    userDummy() { return userdummy(); }
 }
 
 // This can be expanded later for read/write calls

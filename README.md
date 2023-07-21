@@ -2,6 +2,21 @@
 
 ![Build Passing](https://img.shields.io/badge/Build-Passing-green) ![Build Passing](https://img.shields.io/badge/NodeJS-v20.3.1-orange)
 
+![Progress Only Getting Started](https://img.shields.io/badge/Progress-"I_think_we're_just_getting_started."_--_Master_Chief,_Halo_1-orange)
+
+## What It Is
+
+At the time of writing, this engine is capable of displaying a few webpages, and has a basic user login system.
+
+This is a web server "data engine" application that (will) handle Blockchain-like plot points similar to dex-portal. A lot of dex-portal code will be repurposed for this project.
+
+Things that helped make this project possible:
+
+- The Python version of this project designed for Discord as a proof of concept / basic Blockchain-like database system https://github.com/shir0tetsuo/python-stuff/blob/main/inpw_bot.py
+- ChatGPT & Huggingface.co Chat
+- StackOverflow stuff
+- Discord
+
 # Project Building
 
 ## Dependencies

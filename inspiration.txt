@@ -1,5 +1,11 @@
+All these great things helped build my application!
+
+https://huggingface.co/chat
+https://chat.openai.com/
 https://uiverse.io/zanina-yassine/serious-lizard-22
 https://uiverse.io/andrew-demchenk0/little-monkey-23
 https://boxicons.com/?query=
 https://devicon.dev/
 https://stackoverflow.com/questions/65694808/emoji-selector-in-html-webpage
+https://coolors.co/
+https://neumorphism.io/

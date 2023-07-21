@@ -1,14 +1,26 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Import
+/* 
+GENERAL NOTES
+  Don't forget to run npm.sh and configure.sh
+
+  // TODO: For Stripe we don't have the priv key because it's on the other server.
+  //const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY) // $ => G,S
+
+
+
+
+  shir0tetsuo / shadowsword
+*/
+
+// Requirements ///////////////////////////////////////////
+const { LOG } = require('./logging.js') // from logging.js
 const express = require('express');
 const app = express();
 const crypto = require('crypto-js');
 const fs = require("fs") // filesystem mgmt
 
 const { Sequelize, DataTypes } = require('sequelize');
-const {User,Matrix,Well} = require('./database.js')
+const {User,Matrix,Well} = require('./database.js') // from database.js
 
-// TODO: We don't have the priv key because it's on the other server.
-//const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY) // $ => G,S
 
 const bcrypt = require('bcrypt') // https://www.npmjs.com/package/bcrypt
 const saltRounds = 10;
@@ -16,13 +28,28 @@ const saltRounds = 10;
 const bparse = require('body-parser') //https://codeforgeek.com/handle-get-post-request-express-4/
 const cookies = require('cookie-parser') //https://stackoverflow.com/questions/16209145/how-to-set-cookie-in-node-js-using-express-framework
 
+User.sync()
+Matrix.sync()
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Fn
+// Load environment variables from .env file
+require('dotenv').config();
 
+/*
+
+                                        d88888b db    db d8b   db  .o88b. 
+                                        88'     88    88 888o  88 d8P  Y8 
+                                        88ooo   88    88 88V8o 88 8P      
+                                        88~~~   88    88 88 V8o88 8b      
+                                        88      88b  d88 88  V888 Y8b  d8 
+                                        YP      ~Y8888P' VP   V8P  `Y88P' 
+                                                                    
+*/
+
+// Useful for timeout sessions.
 class ExpiringSet {
   // const authorization_timeout = new ExpiringSet();
-  // authorization_timeout.add(IPAddress, 5000)
   // if authorization_timeout.has(IPAddress) {...}
+  // authorization_timeout.add(IPAddress, 5000)
   constructor() {
     this.set = new Set();
   }
@@ -47,79 +74,12 @@ class ExpiringSet {
   }
 }
 
-async function arrayToString(arr) {
-  var result = '';
-  for (const element of arr) {
-    result += element.toString();
-  }
-  return result
-}
-
-async function readFileAsString(filePath) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-// From ChatGPT
-function replaceAllInstances(inputString, searchString, replacementString) {
-  // Escape special characters in the search string to avoid regex issues
-  const escapedSearchString = searchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // Create a regular expression to match all instances of the search string
-  const regex = new RegExp(escapedSearchString, 'g');
-
-  // Use the replace method with the regular expression to perform the replacement
-  const resultString = inputString.replace(regex, replacementString);
-
-  return resultString;
-}
-
-// 99 -> 099 or 0099 or 00099
-// 99 = 90 (2nd place), 9 (1st place)
-// num + (0 * places)
+// 99 -> 099 or 0099 or 00099, 99 = 90 (2nd place), 9 (1st place)
 function zeroPad(num, places) {
+  // num + (0 * places)
   var zero = places - num.toString().length + 1;
   return Array(+(zero > 0 && zero)).join("0") + num;
-}
-
-// Fetch random integer
-function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
-}
-
-
-
-// Load environment variables from .env file
-require('dotenv').config();
-
-// Init DB with Sync Call
-// should produce an error if it doesn't work
-User.sync()
-Matrix.sync()
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Usage Constructors
-
-app.use(express.json());
-app.use(bparse.urlencoded({ extended: true }));
-app.use(bparse.json());
-app.use(cookies())
-// load /img/ media from folder 'img'
-app.use('/static', express.static('static'));
-app.use('/favico.ico', express.static('favicon.ico'));
-app.use('/favicon.ico', express.static('favicon.ico'));
-app.use('/robots.txt', express.static('robots.txt'));
-
-// Express configuration
-app.use(express.static('static'));
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Main Application
+} //v1
 
 // goes into database.js
 async function checkAuthorization(user_uuid, user_hash) {
@@ -141,11 +101,11 @@ async function checkAuthorization(user_uuid, user_hash) {
   // if account is disabled
   if (Account.account_enabled == false) return user_logged;
 
-  console.log('Authenticated for ' + user_uuid)
+  LOG.ticket('Authenticated for ' + user_uuid)
   user_logged = true;
   return user_logged;
 
-}
+} // Deprecated (Old Method)
 
 async function pageloader(central_array = []) {
 
@@ -167,56 +127,168 @@ async function pageloader(central_array = []) {
   }
 
   return data_to_string
-}
+} // Deprecated (Old Method)
 
-// Main page - Login
-app.get('/', async (req, res) => {
 
-  const user_uuid = req.cookies.user_uuid;
-  const user_hash = req.cookies.user_hash;
-  const IPAddress = req.socket.remoteAddress;
+/*
+            d8888b.  .d8b.   d888b  d88888b db   db  .d8b.  d8b   db d8888b. db      d88888b d8888b. 
+            88  `8D d8' `8b 88' Y8b 88'     88   88 d8' `8b 888o  88 88  `8D 88      88'     88  `8D 
+            88oodD' 88ooo88 88      88ooooo 88ooo88 88ooo88 88V8o 88 88   88 88      88ooooo 88oobY' 
+            88~~~   88~~~88 88  ooo 88~~~~~ 88~~~88 88~~~88 88 V8o88 88   88 88      88~~~~~ 88`8b   
+            88      88   88 88. ~8~ 88.     88   88 88   88 88  V888 88  .8D 88booo. 88.     88 `88. 
+            88      YP   YP  Y888P  Y88888P YP   YP YP   YP VP   V8P Y8888D' Y88888P Y88888P 88   YD 
 
-  console.log('Connection to / established by',IPAddress)
+                        PageHandler -> replaceHandler -> ReplaceAllInstances
 
-  
-  // check login cookies against database
-  login_flag = await checkAuthorization(user_uuid, user_hash)
+*/
 
-  if (login_flag) {
-    Account = await Well.fetchUserByUUID(user_uuid)
+async function readFileAsString(filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+} //v1
 
-    // central piece data
-    const central = await readFileAsString('static/01_entry_default.html')
-
-    const badge = "<i class='bx bxs-user-rectangle'></i> "
-
-    var central_shifted = replaceAllInstances(central, '{?get_started_url}',`/u/${user_uuid}`)
-    central_shifted = replaceAllInstances(central_shifted, '{?get_started}', badge + user_uuid)
-
-    // page loader
-    const page_data = await pageloader([central_shifted])
-    var page_data_shifted = replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`)
-
-    res.status(200).send(page_data_shifted)
-  
-  } else {
-    // User not logged in
-    // central piece data
-    const central = await readFileAsString('static/01_entry_default.html')
-
-    const badge = "<i class='bx bxs-user-plus' ></i> "
-
-    var central_shifted = replaceAllInstances(central, '{?get_started_url}','/register')
-    central_shifted = replaceAllInstances(central_shifted, '{?get_started}', badge + 'Create Account or Login')
-
-    // page loader
-    const page_data = await pageloader([central_shifted])
-    var page_data_shifted = replaceAllInstances(page_data, '{?user_account_url}','/register')
-
-    res.status(200).send(page_data_shifted)
+async function arrayToString(arr) {
+  var result = '';
+  for (const element of arr) {
+    result += element.toString();
   }
- 
-});
+  return result
+} //v2
+
+// From ChatGPT
+function replaceAllInstances(inputString, searchString, replacementString) {
+  // Escape special characters in the search string to avoid regex issues
+  const escapedSearchString = searchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Create a regular expression to match all instances of the search string
+  const regex = new RegExp(escapedSearchString, 'g');
+
+  // Use the replace method with the regular expression to perform the replacement
+  const resultString = inputString.replace(regex, replacementString);
+
+  return resultString;
+} //v2 (do not remove)
+
+async function replaceHandler(replacements, page) {
+  for (const replacement_pair in replacements) {
+    replaceText = replacements[replacement_pair][0]
+    replaceWith = replacements[replacement_pair][1]
+    page = await replaceAllInstances(page, replaceText, replaceWith)
+  }
+  return page
+} //v3
+
+async function pageHandler(replacements, central_array = []) {
+  const header = await readFileAsString('static/00_headers.html') // HTML page headers
+  const central_piece = await arrayToString(central_array) // HTML center pieces
+  const tails = await readFileAsString('static/99_tails.html') // </body></html>
+  const page_data = [header, central_piece, tails] // The Constructed Page array
+  var page = await arrayToString(page_data)
+  // Replacement Engine
+  page = await replaceHandler(replacements, page)
+  return page;
+} //v3
+
+/*
+
+                                           .d8b.  db    db d888888b db   db 
+                                          d8' `8b 88    88 `~~88~~' 88   88 
+                                          88ooo88 88    88    88    88ooo88 
+                                          88~~~88 88    88    88    88~~~88 
+                                          88   88 88b  d88    88    88   88 
+                                          YP   YP ~Y8888P'    YP    YP   YP 
+
+  CLIENT INFORMATION HANDLER (clientInformation)
+
+  req -> headers, user_uuid, user_hash, IPAddress, 
+  -> user = loadUserAuth = { Authorized, Account{} }
+
+*/
+
+async function loadUserAuth(user_uuid, user_hash) {
+  if (!user_uuid || !user_hash) return { Authorized: false, Account: Well.userDummy() }
+  Account = await Well.fetchUserByUUID(user_uuid)
+  try {
+    Authorized = (Account.account_hash == user_hash && Account.account_enabled) ? true : false
+    //return { Authorized: Authorized, Account: Account}
+  } catch (e) {
+    Authorized = false;
+    Account = Well.userDummy();
+    console.log(e)
+    //return { Authorized: false, Account: Well.userDummy() }
+  }
+  LOG.ticket(`Account: ${Account.account_uuid}, Authority-Level: ${Account.account_authority}`)
+  LOG.ticket(`Authorized: ${Authorized}, (Enabled: ${Account.account_enabled}, Level: ${Account.account_level}, Tokens: ${Account.account_tokens})`)
+  return { Authorized: Authorized, Account: Account }
+} //v3
+
+async function clientInformation(req) {
+  LOG.radio(`CLIENT ${req.socket.remoteAddress} => ${req.path}`)
+  return {
+    headers: {
+      userAgent: req.header('user-agent'),
+      contentType: req.header('Content-Type'),
+      domain: req.domain,
+      path: req.path
+    },
+    user_uuid: req.cookies.user_uuid,
+    user_hash: req.cookies.user_hash,
+    IPAddress: req.socket.remoteAddress,
+    user: await loadUserAuth(req.cookies.user_uuid, req.cookies.user_hash) //.Authorized, .Account.account_uuid ...
+  }
+} //v3
+
+/*
+
+                                              db    db .d8888. d88888b 
+                                              88    88 88'  YP 88'     
+                                              88    88 `8bo.   88ooooo 
+                                              88    88   `Y8b. 88~~~~~ 
+                                              88b  d88 db   8D 88.     
+                                              ~Y8888P' `8888Y' Y88888P 
+
+*/
+app.use(express.json());
+app.use(bparse.urlencoded({ extended: true }));
+app.use(bparse.json());
+app.use(cookies())
+app.use('/static', express.static('static'));
+app.use(express.static('static'));
+app.use('/favico.ico', express.static('favicon.ico'));
+app.use('/favicon.ico', express.static('favicon.ico'));
+app.use('/robots.txt', express.static('robots.txt'));
+
+/*
+                                                .d8b.  d8888b. d8888b. 
+                                                d8' `8b 88  `8D 88  `8D 
+                                                88ooo88 88oodD' 88oodD' 
+                                                88~~~88 88~~~   88~~~   
+                                                88   88 88      88      
+                                                YP   YP 88      88      
+*/
+app.get('/', async (req, res) => {
+  ClientAccount = await clientInformation(req)
+
+  badge = (ClientAccount.user.Authorized) ? `<i class='bx bxs-user-rectangle'></i> ` : "<i class='bx bxs-user-plus' ></i> "
+  
+  const replacements = [
+    ['{?user_account_url}', (ClientAccount.user.Authorized) ? `/u/${ClientAccount.user.Account.account_uuid}` : `/register`],
+    ['{?get_started_url}', (ClientAccount.user.Authorized) ? `/u/${ClientAccount.user.Account.account_uuid}` : `/register`],
+    ['{?get_started}', (ClientAccount.user.Authorized) ? `${badge} ${ClientAccount.user.Account.account_uuid}` : `${badge} Create Account or Login`],
+  ]
+  
+  const central = await readFileAsString('static/01_entry_default.html')
+  const page = await pageHandler(replacements, [central])
+
+  res.status(200).send(page)
+}) //v3
 
 // Simple UUID Generator
 app.get('/g', async (req, res) => {
@@ -305,18 +377,47 @@ app.get('/register', async (req, res) => {
   res.status(200).send(page_data_shifted)
 })
 
-// Need strong security here.
+app.get('/about', async (req, res) => {
+  const central = await readFileAsString('static/20_about.html')
+  const page_end = await readFileAsString('static/12_user_panel_end.html')
+  page_data = await pageloader([central, page_end])
+  const user_uuid = req.cookies.user_uuid
+  const user_hash = req.cookies.user_hash
+  login_flag = await checkAuthorization(user_uuid, user_hash)
+  
+  var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
+
+  res.status(200).send(page_data_shifted)
+})
+
+/*
+
+                                            d8888b.  .d88b.  .d8888. d888888b 
+                                            88  `8D .8P  Y8. 88'  YP `~~88~~' 
+                                            88oodD' 88    88 `8bo.      88    
+                                            88~~~   88    88   `Y8b.    88    
+                                            88      `8b  d8' db   8D    88    
+                                            88       `Y88P'  `8888Y'    YP    
+
+*/
+
 const authorization_timeout = new ExpiringSet();
 app.post('/authorization', async (req, res) => {
 
   const IPAddress = req.socket.remoteAddress;
   
   try {
+
+    // authorization timeout
     if (authorization_timeout.has(IPAddress)) return res.status(200).json({ server: 'Please wait 5 seconds before sending another request.' })
     authorization_timeout.add(IPAddress, 5000)
+
     client_submission = Object.assign({},req.body)
+
+    // If submission mode missing
     if (!client_submission.mode) return res.status(200).json({ server: '<b class="cardtomato">Mode Not Set</b>' })
 
+    // Registration Mode
     if (client_submission.mode == 'register') {
       client_password = client_submission.password;
       client_password_confirm = client_submission.passwordconfirm;
@@ -331,6 +432,7 @@ app.post('/authorization', async (req, res) => {
       res.status(200).json({ server: '<b class="cardmarine">OK</b>', grant: { new_UUID: new_UUID, new_HASH: new_HASH, redirection: '' } })
     }
 
+    // Login Mode
     if (client_submission.mode == 'login') {
       
       client_uuid = client_submission.uuid;
@@ -343,29 +445,26 @@ app.post('/authorization', async (req, res) => {
 
       res.status(200).json({ server: '<b class="cardmarine">OK</b>', grant: { UUID: client_uuid, HASH: account_info.account_hash, redirection: `u/${client_uuid}` } })
     }
+
   } catch (e) {
     return res.status(500).json({ server: e.message })
   }
   
 })
 
-app.get('/about', async (req, res) => {
-  const central = await readFileAsString('static/20_about.html')
-  const page_end = await readFileAsString('static/12_user_panel_end.html')
-  page_data = await pageloader([central, page_end])
-  const user_uuid = req.cookies.user_uuid
-  const user_hash = req.cookies.user_hash
-  login_flag = await checkAuthorization(user_uuid, user_hash)
-  
-  var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
-
-  res.status(200).send(page_data_shifted)
-})
-
+/*
+                                        .d8888. d888888b  .d8b.  d8888b. d888888b 
+                                        88'  YP `~~88~~' d8' `8b 88  `8D `~~88~~' 
+                                        `8bo.      88    88ooo88 88oobY'    88    
+                                          `Y8b.    88    88~~~88 88`8b      88    
+                                        db   8D    88    88   88 88 `88.    88    
+                                        `8888Y'    YP    YP   YP 88   YD    YP    
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// Start the server
+*/
+
 const port = process.env.PORT //|| 3000;
 app.listen(port, () => {
-  
-  console.log(`👍 The server has started on port ${port}`);
+  LOG.thumbs(`The server has started on port ${port}`);
 });
-

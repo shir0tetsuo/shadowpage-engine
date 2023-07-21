@@ -8,3 +8,5 @@
 /usr/local/bin/npm install --save stripe bcrypt
 /usr/local/bin/npm install --save body-parser cookie-parser
 /usr/local/bin/npm install --save uuid
+#/usr/local/bin/npm install --save chalk
+#/usr/local/bin/npm install --save colorette
