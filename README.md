@@ -16,6 +16,8 @@ Things that helped make this project possible:
 - ChatGPT & Huggingface.co Chat
 - StackOverflow stuff
 - Discord
+- Visualization tools like coolors
+- The npm community
 
 # Project Building
 

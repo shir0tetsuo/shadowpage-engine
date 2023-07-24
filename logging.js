@@ -1,8 +1,5 @@
-
-function doPrint(glyph, message) {
-    if (!message) message = ''
-    return console.log(glyph, message)
-}
+// Super simple modular console logging system
+function doPrint(glyph, message) { if (!message) message = ''; return console.log(glyph, message) }
 
 const LoggingSystem = {
 
@@ -16,10 +13,10 @@ const LoggingSystem = {
 
     puzzle(message) { return doPrint('🧩',message) },
 
-    radio(message) { return doPrint('📻',message) }
+    radio(message) { return doPrint('📻',message) },
+
+    fire(message) { return doPrint('🔥',message) }
     
 }
 
-module.exports = {
-    LOG: LoggingSystem
-}
+module.exports = { LOG: LoggingSystem }

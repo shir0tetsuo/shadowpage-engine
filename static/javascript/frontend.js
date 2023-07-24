@@ -7,6 +7,19 @@ function toggleElementByID(elementID) {
     }
 }
 
+function removeHiddenClass(elementID) {
+  const element = document.getElementById(elementID)
+  element.classList.remove("hidden")
+}
+
+function addHiddenClass(elementID) {
+  const element = document.getElementById(elementID)
+  element.classList.add("hidden")
+}
+
+
+
+
 function toast(elementID, message) {
     var element = document.getElementById(elementID)
     element.innerHTML = message
@@ -56,6 +69,24 @@ function checkCookie(cookieName) {
   
     // The cookie was not found
     return false;
+}
+
+function getCookieValue(cookieName) {
+  // Split the cookie string into individual cookies
+  const cookies = document.cookie.split(';');
+
+  // Loop through the cookies to find the one with the specified name
+  for (let i = 0; i < cookies.length; i++) {
+    const cookie = cookies[i].trim();
+    // Check if the cookie starts with the specified name followed by an '=' sign
+    if (cookie.startsWith(`${cookieName}=`)) {
+      // Return the value of the cookie (the part after the '=' sign)
+      return cookie.substring(cookieName.length + 1);
+    }
+  }
+
+  // Return null if the cookie with the specified name was not found
+  return null;
 }
 
 function isHTTPS() {

@@ -77,6 +77,77 @@ input {
   padding-left: 3rem;
 }
 
+.dropdown:hover .dd {
+  display: block;
+  cursor: auto;
+}
+
+.dd {
+  max-width: 30%;
+  display: none;
+  text-align: justify;
+  position: absolute;
+  background-color: #fff;
+  color: #1f1f1f;
+  min-width: 15rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+  z-index: 8;
+}
+
+.buttonlike {
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: none;
+  color: #FFF;
+  background: #292929;
+  cursor: pointer;
+  border-radius: 0px;
+  box-shadow: 7px 7px 20px #242424;
+  -moz-transition: .25s ease-in-out;
+  -webkit-transition: .25s ease-in-out;
+  transition: .25s ease-in-out;
+}
+
+.buttonlike a{
+  padding: 0;
+  color: #FE654F;
+  background-color: #FFF;
+  cursor: pointer;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.buttonlike a:hover{
+  color: #9291C7 !important;
+}
+
+.buttonlike:hover {
+  background: #fff !important;
+  color: #1F1F1F !important;
+  -moz-transition: .25s ease-in-out;
+  -webkit-transition: .25s ease-in-out;
+  transition: .25s ease-in-out;
+}
+
+.dd-element {
+  position: relative;
+  width: 1px;
+  top: 0.1rem;
+  z-index: 9;
+}
+
+.dd:hover {
+  display: block;
+}
+
+.spaceda {
+  padding-top: 2rem;
+}
+
 .usermain {
   display: flex;
   flex-flow: row wrap;
@@ -136,7 +207,7 @@ input {
   background: #1F1F1F;
   background-image: url('/static/images/delims.svg');
   background-repeat: repeat;
-  background-size: 25%;
+  background-size: 75%;
 }
 
 .hero-container {

@@ -101,6 +101,14 @@ const User = sequelize.define('User', {
   }
 });
 
+/*
+TODO:
+  - CRUD for the matrix
+  - "Factories" and reward system
+  - Realm Selection
+  - Realm Buying
+  - Invitation System
+*/
 const Matrix = sequelize.define('Matrix', {
   plot_uuid: {
     type: DataTypes.STRING,

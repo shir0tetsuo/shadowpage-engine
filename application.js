@@ -50,84 +50,20 @@ class ExpiringSet {
   // const authorization_timeout = new ExpiringSet();
   // if authorization_timeout.has(IPAddress) {...}
   // authorization_timeout.add(IPAddress, 5000)
-  constructor() {
-    this.set = new Set();
-  }
-
+  constructor() { this.set = new Set(); }
   add(value, timeoutMilliseconds) {
     this.set.add(value);
     setTimeout(() => {
       this.set.delete(value);
     }, timeoutMilliseconds);
   }
-
-  has(value) {
-    return this.set.has(value);
-  }
-
-  delete(value) {
-    return this.set.delete(value);
-  }
-
-  values() {
-    return this.set.values();
-  }
+  has(value) { return this.set.has(value); }
+  delete(value) { return this.set.delete(value); }
+  values() { return this.set.values(); }
 }
 
-// 99 -> 099 or 0099 or 00099, 99 = 90 (2nd place), 9 (1st place)
-function zeroPad(num, places) {
-  // num + (0 * places)
-  var zero = places - num.toString().length + 1;
-  return Array(+(zero > 0 && zero)).join("0") + num;
-} //v1
-
-// goes into database.js
-async function checkAuthorization(user_uuid, user_hash) {
-  //console.log('Authorization Check')
-
-  var user_logged = false;
-
-  // no uuid or no hash
-  if (!user_uuid || !user_hash) return user_logged;
-
-  Account = await Well.fetchUserByUUID(user_uuid)
-
-  // no account
-  if (!Account) return user_logged;
-
-  // if account hash doesn't equal the user hash in cookies
-  if (Account.account_hash != user_hash) return user_logged;
-
-  // if account is disabled
-  if (Account.account_enabled == false) return user_logged;
-
-  LOG.ticket('Authenticated for ' + user_uuid)
-  user_logged = true;
-  return user_logged;
-
-} // Deprecated (Old Method)
-
-async function pageloader(central_array = []) {
-
-  var data_to_string = ''
-
-  try {
-    const header = await readFileAsString('static/00_headers.html')
-    const central = await arrayToString(central_array)
-    const tails = await readFileAsString('static/99_tails.html')
-
-
-    const page_data = [header, central, tails]
-
-    data_to_string = await arrayToString(page_data)
-
-
-  } catch (error) {
-    console.error('Error Reading file: ', error)
-  }
-
-  return data_to_string
-} // Deprecated (Old Method)
+// num + (0 * places), 99 -> 099 or 0099 or 00099, 99 = 90 (2nd place), 9 (1st place)
+function zeroPad(num, places) { var zero = places - num.toString().length + 1; return Array(+(zero > 0 && zero)).join("0") + num; } //v1
 
 
 /*
@@ -142,45 +78,20 @@ async function pageloader(central_array = []) {
 
 */
 
-async function readFileAsString(filePath) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-} //v1
+async function readFileAsString(filePath) { return new Promise((resolve, reject) => { fs.readFile(filePath, 'utf8', (err, data) => { if (err) { reject(err) } else { resolve(data) }})})} //v1
 
-async function arrayToString(arr) {
-  var result = '';
-  for (const element of arr) {
-    result += element.toString();
-  }
-  return result
-} //v2
+async function arrayToString(arr) { var result = ''; for (const element of arr) { result += element.toString(); }; return result } //v2
 
-// From ChatGPT
 function replaceAllInstances(inputString, searchString, replacementString) {
-  // Escape special characters in the search string to avoid regex issues
-  const escapedSearchString = searchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // Create a regular expression to match all instances of the search string
-  const regex = new RegExp(escapedSearchString, 'g');
-
-  // Use the replace method with the regular expression to perform the replacement
-  const resultString = inputString.replace(regex, replacementString);
-
+  const escapedSearchString = searchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special characters in the search string to avoid regex issues
+  const regex = new RegExp(escapedSearchString, 'g'); // Create a regular expression to match all instances of the search string
+  const resultString = inputString.replace(regex, replacementString); // Use the replace method with the regular expression to perform the replacement
   return resultString;
-} //v2 (do not remove)
+} //v2 from ChatGPT (do not remove)
 
 async function replaceHandler(replacements, page) {
   for (const replacement_pair in replacements) {
-    replaceText = replacements[replacement_pair][0]
-    replaceWith = replacements[replacement_pair][1]
-    page = await replaceAllInstances(page, replaceText, replaceWith)
+    replaceText = replacements[replacement_pair][0]; replaceWith = replacements[replacement_pair][1]; page = await replaceAllInstances(page, replaceText, replaceWith)
   }
   return page
 } //v3
@@ -266,7 +177,7 @@ app.use('/favicon.ico', express.static('favicon.ico'));
 app.use('/robots.txt', express.static('robots.txt'));
 
 /*
-                                                .d8b.  d8888b. d8888b. 
+                                                 .d8b.  d8888b. d8888b. 
                                                 d8' `8b 88  `8D 88  `8D 
                                                 88ooo88 88oodD' 88oodD' 
                                                 88~~~88 88~~~   88~~~   
@@ -275,6 +186,7 @@ app.use('/robots.txt', express.static('robots.txt'));
 */
 app.get('/', async (req, res) => {
   ClientAccount = await clientInformation(req)
+  if (!ClientAccount.user.Account.account_enabled) return res.status(403).send(process.env.USERBANNEDMSG)
 
   badge = (ClientAccount.user.Authorized) ? `<i class='bx bxs-user-rectangle'></i> ` : "<i class='bx bxs-user-plus' ></i> "
   
@@ -282,112 +194,92 @@ app.get('/', async (req, res) => {
     ['{?user_account_url}', (ClientAccount.user.Authorized) ? `/u/${ClientAccount.user.Account.account_uuid}` : `/register`],
     ['{?get_started_url}', (ClientAccount.user.Authorized) ? `/u/${ClientAccount.user.Account.account_uuid}` : `/register`],
     ['{?get_started}', (ClientAccount.user.Authorized) ? `${badge} ${ClientAccount.user.Account.account_uuid}` : `${badge} Create Account or Login`],
+    ['{?start}', (ClientAccount.user.Authorized) ? `<span class="spaceda"><a class="cardmarine" href="#"><i class='bx bxs-factory'></i> Launch</a></span>` : '' ]
   ]
   
   const central = await readFileAsString('static/01_entry_default.html')
   const page = await pageHandler(replacements, [central])
 
-  res.status(200).send(page)
+  res.status(200).append('AuthLevel', ClientAccount.user.Account.account_authority).send(page)
 }) //v3
 
-// Simple UUID Generator
-app.get('/g', async (req, res) => {
-  res.status(200).send(Well.fetchUniqueUUID())
-});
 
-// User by ID
 app.get('/u/:uuid', async (req, res) => {
-  const user_uuid = req.cookies.user_uuid
-  const user_hash = req.cookies.user_hash
+  ClientAccount = await clientInformation(req)
+  if (!ClientAccount.user.Account.account_enabled) return res.status(403).send(process.env.USERBANNEDMSG)
+
   const { uuid } = req.params;
+  const editable = (uuid == ClientAccount.user.Account.account_uuid && ClientAccount.user.Authorized) ? true : false;
+  const admin = (ClientAccount.user.Account.account_authority >= 4) ? true : false
 
-  // login check
-  login_flag = await checkAuthorization(user_uuid, user_hash)
-
-  // user = user
-  editable = (uuid == user_uuid && login_flag) ? true : false;
-  // edit button, disabled
-  edit_button = (editable) ? `<a class='cardmarine' href='#' id='user_edit_button' title='Edit Account'><i class='bx bx-cog' ></i></a>` : ''
-
-  const account_info = await Well.fetchUserByUUID(uuid)
-
-  var admin_privilege = false
-  
-  if (account_info) {
-    admin_privilege = (account_info.account_authority >= 4 && editable) ? true : false
-  } 
-  
-  const admin_edit_button = (admin_privilege) ? `<a class="cardbee" title="Administrative Tools" href="/admin"><i class='bx bxs-zap' ></i></a>` : ``
-
+  const central = await readFileAsString('static/11_user_panel_top.html')
   const page_end = await readFileAsString('static/12_user_panel_end.html')
 
-  if (account_info) {
+  uuid_profile = await Well.fetchUserByUUID(uuid)
 
-    // static
-    const central = await readFileAsString('static/11_user_panel_top.html')
+  const replacements = [
+    ['{?user_account_url}', (ClientAccount.user.Authorized) ? `/u/${ClientAccount.user.Account.account_uuid}` : `/register`],
+    ['{?edit_button}', (editable) ? `<a class='cardmarine' href='#' id='user_edit_button' title='Edit Account'><i class='bx bx-cog' ></i></a>` : ''],
+    ['{?admin_button}', (admin) ? `<a class="cardbee" title="Administrative Tools" href="/admin"><i class='bx bxs-shapes bx-flip-horizontal' ></i></a>` : ``],
+    ['{?field_acc_uuid}', (uuid_profile) ? ("<i class='bx bxs-user-rectangle'></i> "+uuid_profile.account_uuid) : "<i class='bx bxs-user-rectangle'></i> 00000000-0000-0000-0000-000000000000"],
+    ['{?field_uuidProfile_uuid}', uuid]
+  ]
 
-    // put account uuid from db onto page
-    const field_acc_uuid = `<i class='bx bxs-user-rectangle'></i> ${account_info.account_uuid}`
-    var central_shifted = replaceAllInstances(central, '{?field_acc_uuid}', field_acc_uuid)
+  const page = await pageHandler(replacements, [central, page_end])
 
-    // put edit button on page if available
-    central_shifted = replaceAllInstances(central_shifted, '{?edit_button}', edit_button)
-    central_shifted = replaceAllInstances(central_shifted, '{?admin_button}', admin_edit_button)
-
-    // run pageloader
-    const page_data = await pageloader([central_shifted, page_end])
-
-    // put user account url on page at nav
-    var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
-
-    // send response
-    res.status(200).send(page_data_shifted)
-
+  if (uuid_profile) {
+    res.status(200).append('AuthLevel', ClientAccount.user.Account.account_authority)
+    .send(page)
   } else {
-
-    const central = await readFileAsString('static/11_user_panel_top.html')
-    const field_acc_uuid = `<i class='bx bxs-user-rectangle'></i> 00000000-0000-0000-0000-000000000000`
-
-    var central_shifted = replaceAllInstances(central, '{?field_acc_uuid}', field_acc_uuid)
-    central_shifted = replaceAllInstances(central_shifted, '{?edit_button}', edit_button)
-    central_shifted = replaceAllInstances(central_shifted, '{?admin_button}', admin_edit_button)
-
-    const page_data = await pageloader([central_shifted, page_end])
-    var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
-    
-    res.status(404).send(page_data_shifted)
+    const UserNotFoundMessage = 'user-not-found'
+    res.status(404)
+    .append('AuthLevel', ClientAccount.user.Account.account_authority)
+    .cookie('ServerMessage', UserNotFoundMessage, {
+      expires: new Date(Date.now() + 3600000),
+      sameSite: 'Lax',
+      Secure: (req.protocol === 'https') ? true : false
+    })
+    .cookie('UserNotFound',uuid, {
+      expires: new Date(Date.now() + 3600000),
+      sameSite: 'Lax',
+      Secure: (req.protocol === 'https') ? true : false
+    })
+    .send(page)
   }
 })
 
-// User Registration
+// Registration v3
 app.get('/register', async (req, res) => {
-  const central = await readFileAsString('static/10_user_registration.html')
-  const stub = await readFileAsString('static/19_stub_loggedin.html')
+  ClientAccount = await clientInformation(req)
+
+  if (!ClientAccount.user.Account.account_enabled) return res.status(403).send(process.env.USERBANNEDMSG)
+
+  const replacements = [
+    ['{?user_account_url}','/register']
+  ]
+
+  const central = (ClientAccount.user.Authorized) ? (await readFileAsString('static/19_stub_loggedin.html')) : (await readFileAsString('static/10_user_registration.html'))
   const page_end = await readFileAsString('static/12_user_panel_end.html')
-  const user_uuid = req.cookies.user_uuid
-  const user_hash = req.cookies.user_hash
-  login_flag = await checkAuthorization(user_uuid, user_hash)
-  if (login_flag) {
-    page_data = await pageloader([stub, page_end])
-  } else {
-    page_data = await pageloader([central, page_end])
-  }
-  
-  var page_data_shifted = replaceAllInstances(page_data, '{?user_account_url}',`/register`)
-  res.status(200).send(page_data_shifted)
+
+  const page = await pageHandler(replacements, [central, page_end])
+  res.status(200).append('AuthLevel', ClientAccount.user.Account.account_authority).send(page)
 })
 
 app.get('/about', async (req, res) => {
+  ClientAccount = await clientInformation(req)
+
+  if (!ClientAccount.user.Account.account_enabled) return res.status(403).send(process.env.USERBANNEDMSG)
+
   const central = await readFileAsString('static/20_about.html')
   const page_end = await readFileAsString('static/12_user_panel_end.html')
-  page_data = await pageloader([central, page_end])
-  const user_uuid = req.cookies.user_uuid
-  const user_hash = req.cookies.user_hash
-  login_flag = await checkAuthorization(user_uuid, user_hash)
   
-  var page_data_shifted = (login_flag) ? replaceAllInstances(page_data, '{?user_account_url}',`/u/${user_uuid}`) : replaceAllInstances(page_data,'{?user_account_url}','/register')
+  const replacements = [
+    ['{?user_account_url}', (ClientAccount.user.Authorized) ? `/u/${ClientAccount.user.Account.account_uuid}` : `/register`]
+  ]
 
-  res.status(200).send(page_data_shifted)
+  const page = await pageHandler(replacements, [central, page_end])
+
+  res.status(200).send(page)
 })
 
 /*

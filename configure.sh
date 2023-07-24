@@ -13,9 +13,12 @@ DEFAULTUUID='a0000001-0000-0000-0000-000000000001'
 # where 'npm' and 'node' are installed
 DEFAULTNODEDIR='/usr/local/bin/'
 
+DEFAULTUSERBANNEDMSG="Account Disabled! Contact the admin at shadowsword@pm.me SUBJECT: BDE account disabled"
+
 read -p "Enter DB file path ($PWD/server-data.sqlite): " DB_FILE_PATH
 read -p "Enter the APP server port (3000): " PORT
 read -p "Enter Admin UUID: ($DEFAULTUUID)" adminaccuuid
+read -p "Enter Banned Account Message ((omitted)): " userbanned
 read -s -p "Enter Admin Password (8 Characters) (changeme): " adminpass
 #read -p "Enter NodeJS Exec: ($DEFAULTNODEDIR)" node_execution_dir
 
@@ -28,6 +31,8 @@ echo "DB_FILE_PATH="${DB_FILE_PATH:-$PWD/server-data.sqlite} > .env
 echo "PORT="${PORT:-3000} >> .env
 echo "ADMINUUID="${adminaccuuid:-$DEFAULTUUID} >> .env
 echo "ADMINPASS="${adminpass:-changeme} >> .env
+echo "USERBANMSG="${userbanned:-$DEFAULTUSERBANNEDMSG} >> .env
+echo 
 echo "OK ($PWD/.env)"
 
 $DEFAULTNODEDIR/node $PWD/configure_admin_account.js

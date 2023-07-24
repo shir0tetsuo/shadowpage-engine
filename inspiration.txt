@@ -9,3 +9,4 @@ https://devicon.dev/
 https://stackoverflow.com/questions/65694808/emoji-selector-in-html-webpage
 https://coolors.co/
 https://neumorphism.io/
+https://www.w3schools.com/cssref/pr_class_cursor.php
